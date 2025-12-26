@@ -41,4 +41,6 @@ jobs:
           tags: aethersailor/subconverter:latest
           build-args: |
             THREADS=16
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
