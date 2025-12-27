@@ -832,20 +832,22 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode,
         }
       }
 
-      // 添加 use 字段引用所有原始 provider
-      YAML::Node use_node(YAML::NodeType::Sequence);
-      for (const ProxyProvider &p : ext.providers) {
-        // groupId >= 0 表示这是原始订阅的 provider
-        if (p.groupId >= 0) {
-          use_node.push_back(p.name);
-        }
-      }
-      if (use_node.size() > 0) {
-        singlegroup["use"] = use_node;
-      }
-
-      // 如果有正则表达式，添加 filter 字段
+      // 只有包含正则表达式的策略组才引用 provider
+      // 不包含正则的策略组只引用其他策略组，不需要 provider
       if (has_regex && !regex_pattern.empty()) {
+        // 添加 use 字段引用所有原始 provider
+        YAML::Node use_node(YAML::NodeType::Sequence);
+        for (const ProxyProvider &p : ext.providers) {
+          // groupId >= 0 表示这是原始订阅的 provider
+          if (p.groupId >= 0) {
+            use_node.push_back(p.name);
+          }
+        }
+        if (use_node.size() > 0) {
+          singlegroup["use"] = use_node;
+        }
+
+        // 添加 filter 字段
         singlegroup["filter"] = regex_pattern;
       }
     }
