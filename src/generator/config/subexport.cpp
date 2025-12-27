@@ -37,7 +37,19 @@ static void insertProxyProvidersBeforeGroups(std::string &yaml_str,
     }
   }
 
-  std::string providers_str = "proxy-providers:\n" + providers_content;
+  // 为每一行添加2个空格的缩进（YAML格式要求）
+  std::string indented_content;
+  std::istringstream stream(providers_content);
+  std::string line;
+  while (std::getline(stream, line)) {
+    if (!line.empty()) {
+      indented_content += "  " + line + "\n"; // 添加2个空格缩进
+    } else {
+      indented_content += "\n";
+    }
+  }
+
+  std::string providers_str = "proxy-providers:\n" + indented_content;
   // 确保末尾有换行符，避免与 proxy-groups 连在一起
   if (!providers_str.empty() && providers_str.back() != '\n') {
     providers_str += "\n";
