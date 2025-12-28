@@ -158,7 +158,7 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID,
     for (const auto &l : links) {
       if (l.empty())
         continue;
-      addNodes(l, allNodes, groupID, settings);
+      addNodes(l, allNodes, groupID, parse_set);
     }
     return 0;
   }
