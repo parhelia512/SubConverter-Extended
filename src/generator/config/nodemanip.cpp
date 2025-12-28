@@ -19,6 +19,7 @@
 #ifdef USE_MIHOMO_PARSER
 #include "parser/mihomo_schemes.h"
 #endif
+#include "parser/config/proxy_utils.h"
 #include "utils/regexp.h"
 #include "utils/string.h"
 #include "utils/urlencode.h"
@@ -268,30 +269,8 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID,
           node.Type = ProxyType::Unknown; // Will be set based on type string
 
           // Map mihomo proxy type to subconverter ProxyType
-          if (mnode.type == "ss")
-            node.Type = ProxyType::Shadowsocks;
-          else if (mnode.type == "ssr")
-            node.Type = ProxyType::ShadowsocksR;
-          else if (mnode.type == "vmess")
-            node.Type = ProxyType::VMess;
-          else if (mnode.type == "trojan")
-            node.Type = ProxyType::Trojan;
-          else if (mnode.type == "snell")
-            node.Type = ProxyType::Snell;
-          else if (mnode.type == "http")
-            node.Type = ProxyType::HTTP;
-          else if (mnode.type == "https")
-            node.Type = ProxyType::HTTPS;
-          else if (mnode.type == "socks5")
-            node.Type = ProxyType::SOCKS5;
-          else if (mnode.type == "vless")
-            node.Type = ProxyType::VLESS;
-          else if (mnode.type == "hysteria")
-            node.Type = ProxyType::Hysteria;
-          else if (mnode.type == "hysteria2")
-            node.Type = ProxyType::Hysteria2;
-          else if (mnode.type == "tuic")
-            node.Type = ProxyType::TUIC;
+          node.Type = getProxyTypeFromString(mnode.type);
+
           // Add more types as needed
 
           node.Hostname = mnode.server;
