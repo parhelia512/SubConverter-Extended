@@ -469,6 +469,10 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
       argGenClashScript.is_undef())
     argExpandRulesets.define(true);
 
+  // 强制 expand=false，不管用户提供什么值
+  // 这确保所有请求都使用 proxy-provider 模式的最佳配置路径
+  argExpandRulesets.define(false);
+
   ext.clash_proxies_style = global.clashProxiesStyle;
   ext.clash_proxy_groups_style = global.clashProxyGroupsStyle;
 
