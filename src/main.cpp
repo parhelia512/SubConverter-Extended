@@ -33,7 +33,7 @@ void SetConsoleTitle(const std::string &title) {
 #endif // _WIN32
 
 void setcd(std::string &file) {
-  char szTemp[1024] = {}, filename[256] = {};
+  char szTemp[4096] = {}, filename[256] = {};
   std::string path;
 #ifdef _WIN32
   char *pname = NULL;
