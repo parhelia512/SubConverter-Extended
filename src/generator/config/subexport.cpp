@@ -358,37 +358,35 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode,
       // 3. Parameter is NOT hardcoded by Mihomo (protects Mihomo's intentional
       // defaults)
 
-      // UDP support
-      if (!udp.is_undef() && x.RawParams.find("udp") == x.RawParams.end()) {
+      // UDP support - override Mihomo defaults (but protect hardcoded)
+      if (!udp.is_undef()) {
         if (mihomo::isParamSupported(protocol, "udp") &&
-            !mihomo::isParamHardcoded(protocol, "udp")) { // ← Protect hardcoded
+            !mihomo::isParamHardcoded(protocol, "udp")) {
           singleproxy["udp"] = udp.get();
         }
       }
 
-      // Skip Certificate Verification
-      if (!scv.is_undef() &&
-          x.RawParams.find("skip-cert-verify") == x.RawParams.end()) {
+      // Skip Certificate Verification - override Mihomo defaults (but protect
+      // hardcoded)
+      if (!scv.is_undef()) {
         if (mihomo::isParamSupported(protocol, "skip-cert-verify") &&
-            !mihomo::isParamHardcoded(
-                protocol, "skip-cert-verify")) { // ← Protect hardcoded
+            !mihomo::isParamHardcoded(protocol, "skip-cert-verify")) {
           singleproxy["skip-cert-verify"] = scv.get();
         }
       }
 
-      // TCP Fast Open
-      if (!tfo.is_undef() && x.RawParams.find("tfo") == x.RawParams.end()) {
+      // TCP Fast Open - override Mihomo defaults (but protect hardcoded)
+      if (!tfo.is_undef()) {
         if (mihomo::isParamSupported(protocol, "tfo") &&
-            !mihomo::isParamHardcoded(protocol, "tfo")) { // ← Protect hardcoded
+            !mihomo::isParamHardcoded(protocol, "tfo")) {
           singleproxy["tfo"] = tfo.get();
         }
       }
 
-      // XUDP support
-      if (!xudp.is_undef() && x.RawParams.find("xudp") == x.RawParams.end()) {
+      // XUDP support - override Mihomo defaults (but protect hardcoded)
+      if (!xudp.is_undef()) {
         if (mihomo::isParamSupported(protocol, "xudp") &&
-            !mihomo::isParamHardcoded(protocol,
-                                      "xudp")) { // ← Protect hardcoded
+            !mihomo::isParamHardcoded(protocol, "xudp")) {
           singleproxy["xudp"] = xudp.get();
         }
       }
