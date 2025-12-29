@@ -169,8 +169,9 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID,
   else if (startsWith(link, "https://t.me/http") ||
            startsWith(link, "tg://http"))
     linkType = ConfType::HTTP;
-  else if (isLink(link) || startsWith(link, "surge:///install-config"))
-    linkType = ConfType::SUB; // 不再包含 isMihomoScheme，由后续逻辑处理
+  else if (isLink(link) || startsWith(link, "surge:///install-config") ||
+           isMihomoScheme) // Mihomo 节点链接走 SUB case，由新分流逻辑区分
+    linkType = ConfType::SUB;
   else if (startsWith(link, "Netch://"))
     linkType = ConfType::Netch;
   else if (fileExist(link))
