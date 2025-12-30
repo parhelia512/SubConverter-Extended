@@ -574,7 +574,7 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
                "Failed to load user provided config, trying fallback configs...",
                LOG_LEVEL_WARNING);
       
-      for (const std::string &fallbackUrl : FALLBACK_CONFIG_URLS) {
+      for (std::string fallbackUrl : FALLBACK_CONFIG_URLS) {
         writeLog(0, "Attempting to load config from: " + fallbackUrl, 
                  LOG_LEVEL_INFO);
         
