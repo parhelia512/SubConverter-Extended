@@ -75,7 +75,7 @@ subconverter 对新节点格式的支持完全取决于维护者的积极性。�
 
 ### 🎯 我们的解决方案  
 
-**那就自己动手吧。** SubConverter-Extended 因此诞生，让转换工具更匹配现代 Clash 内核的使用场景，**服务于所有保留“订阅转换”接口的 Clash 客户端**。
+**那就自己动手吧。** SubConverter-Extended 因此诞生，让转换工具更匹配现代 Clash 内核的使用场景，**服务于所有保留“订阅转换”接口且使用 Mihomo 内核的 Clash 客户端**。
 
 ---
 
