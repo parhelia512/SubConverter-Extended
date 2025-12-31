@@ -100,6 +100,14 @@ COPY . /src
 COPY --from=go-builder /build/bridge/mihomo_schemes.h /src/src/parser/mihomo_schemes.h
 COPY --from=go-builder /build/bridge/param_compat.h /src/src/parser/param_compat.h
 
+# Download latest header-only libraries (override old versions in repo)
+RUN set -xe && \
+    echo "Downloading latest cpp-httplib..." && \
+    wget -q https://raw.githubusercontent.com/yhirose/cpp-httplib/master/httplib.h -O include/httplib.h && \
+    echo "Downloading latest nlohmann/json..." && \
+    wget -q https://github.com/nlohmann/json/releases/latest/download/json.hpp -O include/nlohmann/json.hpp && \
+    echo "Header libraries updated to latest versions"
+
 RUN set -xe && \
     [ -n "${SHA}" ] && sed -i "s/#define BUILD_ID \"\"/#define BUILD_ID \"${SHA}\"/" src/version.h || true && \
     # Copy Go library to bridge directory for CMake detection
