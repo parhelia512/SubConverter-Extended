@@ -35,10 +35,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # [OPTIMIZATION] Cache QuickJSPP build artifacts to speed up C++ workflow
-    - name: Cache QuickJSPP
+    # [OPTIMIZATION] Cache build artifacts (QuickJSPP & LibCron)
+    - name: Cache Build Artifacts
       if: matrix.language == 'c-cpp'
-      id: cache-quickjspp
+      id: cache-cpp-deps
       uses: actions/cache@v4
       with:
         path: |
@@ -46,10 +46,12 @@ jobs:
           /usr/include/quickjs
           /usr/include/quickjspp.hpp
           quickjspp
-        # Invalidating cache weekly or when workflow changes to ensure Freshness
-        key: ${{ runner.os }}-quickjspp-v1-${{ hashFiles('.github/workflows/codeql.yml') }}
+          /usr/local/include/libcron
+          /usr/local/lib/liblibcron.a
+          libcron
+        key: ${{ runner.os }}-cpp-deps-v2-${{ hashFiles('.github/workflows/codeql.yml') }}
 
-    # [SETUP] Install C++ dependencies (Only if cache miss or always required for apt libs)
+    # [SETUP] Install C++ dependencies
     - name: Install C++ dependencies
       if: matrix.language == 'c-cpp'
       run: |
@@ -59,11 +61,12 @@ jobs:
             cmake \
             libpcre2-dev \
             libyaml-cpp-dev \
-            libcurl4-openssl-dev
+            libcurl4-openssl-dev \
+            libhowardhinnant-date-dev
 
     # [SETUP] Build QuickJS (Only if cache missed)
     - name: Build QuickJS
-      if: matrix.language == 'c-cpp' && steps.cache-quickjspp.outputs.cache-hit != 'true'
+      if: matrix.language == 'c-cpp' && steps.cache-cpp-deps.outputs.cache-hit != 'true'
       run: |
         git clone --depth=1 https://github.com/ftk/quickjspp.git
         cd quickjspp
@@ -76,34 +79,41 @@ jobs:
         sudo install -m644 quickjs/quickjs.h quickjs/quickjs-libc.h /usr/include/quickjs/
         sudo install -m644 quickjspp.hpp /usr/include/
 
-    # [SETUP] Install specific C++ libraries via cache restore if needed
-    # Note: /usr/include and /usr/lib contents are simpler to reinstall via steps above if not cached system-wide.
-    # We cached the *files* manually. If cache hit, we need to ensure they are in the right place if the cache restored them to workspace.
-    # The cache action restores to the original path if absolute paths are used? 
-    # GitHub Cache Action documentation says: "path: A list of files, directories, and wildcard patterns to cache and restore."
-    # It restores to the same location relative to workspace, or absolute.
-    # Absolute paths require proper permissions. Let's assume cache restores to workspace and we install.
-    
-    # Actually, for robustness and simplicity in "Automation", we already have the build script.
-    # Re-running installation of QuickJS compiled artifacts if cache hit:
-    - name: Restore QuickJS from Cache
-      if: matrix.language == 'c-cpp' && steps.cache-quickjspp.outputs.cache-hit == 'true'
+    # [SETUP] Build LibCron (Only if cache missed)
+    - name: Build LibCron
+      if: matrix.language == 'c-cpp' && steps.cache-cpp-deps.outputs.cache-hit != 'true'
       run: |
-        echo "Restoring QuickJS from cache..."
-        # If cache restored to working directory 'quickjspp', re-install system files
+        git clone https://github.com/PerMalmberg/libcron
+        cd libcron
+        git checkout v1.3.0  # Pin version for stability
+        cmake -DCMAKE_BUILD_TYPE=Release .
+        make -j$(nproc)
+        sudo make install
+
+    # [SETUP] Restore Artifacts if Cache Hit
+    - name: Restore Artifacts
+      if: matrix.language == 'c-cpp' && steps.cache-cpp-deps.outputs.cache-hit == 'true'
+      run: |
+        echo "Restoring artifacts from cache..."
+        
+        # Restore QuickJS
         cd quickjspp
         sudo install -d /usr/lib/quickjs/
         sudo install -m644 quickjs/libquickjs.a /usr/lib/quickjs/
         sudo install -d /usr/include/quickjs/
         sudo install -m644 quickjs/quickjs.h quickjs/quickjs-libc.h /usr/include/quickjs/
         sudo install -m644 quickjspp.hpp /usr/include/
+        cd ..
+
+        # Restore LibCron
+        cd libcron
+        sudo make install
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
-        # [ADVANCED] Use the 'security-and-quality' suite for maximum safety coverage
         queries: security-and-quality
 
     - name: Perform CodeQL Analysis
