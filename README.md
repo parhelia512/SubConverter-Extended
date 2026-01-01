@@ -29,12 +29,12 @@
 > [!NOTE]
 > **SubConverter-Extended** 是基于 [asdlokj1qpi233/subconverter](https://github.com/asdlokj1qpi233/subconverter) 深度二次开发的订阅转换后端增强版本。
 
-它专为协同 [Mihomo](https://github.com/MetaCubeX/mihomo) 内核优化，提供更现代、更强大的订阅转换服务。
+它专为协同 [Mihomo](https://github.com/MetaCubeX/mihomo) 内核工作优化，提供更现代、更强大的订阅转换服务。
 
 **核心定位转变**：
 SubConverter-Extended 不再充当客户端和机场之间的"中转站"，而是成为独立的**"配置融合器"**——只对客户端服务，不连接机场订阅服务器。同时基于 Mihomo 内核源码，在编译时自动跟进协议支持。  
 
-<img width="723" height="447" alt="22" src="https://github.com/user-attachments/assets/a061a132-89fc-497c-9b93-6f6648ab1d4d" />
+<img width="723" height="447" alt="22" src="https://github.com/user-attachments/assets/8de3ff69-d7c4-45d7-976f-c9887b94b309" />
 
 > [!WARNING]
 > SubConverter-Extended 不再支持 Clash 以外的客户端。  
