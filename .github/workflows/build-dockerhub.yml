@@ -18,6 +18,8 @@ on:
       - master
       - dev
   workflow_dispatch: {}  # Manual trigger
+  schedule:
+    - cron: '0 19 * * 0'  # Run at 03:00 (UTC+8) on Mondays
 
 permissions:
   contents: write  # Changed from 'read' to enable auto-commit
@@ -30,7 +32,8 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     # Skip if commit message contains [skip ci] or [ci skip]
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[ci skip]')"
+    # 确保 schedule 仅在 master 分支运行
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[ci skip]') && (github.event_name != 'schedule' || github.ref == 'refs/heads/master')"
     outputs:
       sha_short: ${{ steps.vars.outputs.sha_short }}
       version: ${{ steps.version.outputs.version }}
@@ -56,7 +59,7 @@ jobs:
             echo "version=$VERSION" >> $GITHUB_OUTPUT
             echo "is_release=true" >> $GITHUB_OUTPUT
             echo "Detected version from tag: $VERSION"
-          elif [[ "${{ github.ref }}" == refs/heads/master ]] && [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          elif [[ "${{ github.ref }}" == refs/heads/master ]] && ([[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.event_name }}" == "schedule" ]]); then
             # Master manual trigger: use latest tag
             VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
             echo "version=$VERSION" >> $GITHUB_OUTPUT
