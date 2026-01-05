@@ -116,7 +116,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile.alpine
+          file: ./Dockerfile
           load: true
           tags: subconverter-temp:builder
           target: builder
@@ -212,7 +212,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile.alpine
+          file: ./Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           platforms: linux/amd64
           tags: ${{ needs.prepare.outputs.tags }}
@@ -252,7 +252,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile.alpine
+          file: ./Dockerfile
           load: true
           tags: subconverter-temp:arm64-builder
           target: builder
@@ -300,7 +300,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile.alpine
+          file: ./Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           platforms: linux/arm64
           tags: ${{ needs.prepare.outputs.tags }}
@@ -362,7 +362,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile
+          file: ./Dockerfile.debian
           load: true
           tags: subconverter-glibc:builder
           target: builder
