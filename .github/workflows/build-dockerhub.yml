@@ -152,6 +152,8 @@ jobs:
             echo "Extracting binary for release..."
             docker cp $CONTAINER_ID:/src/subconverter ./subconverter
             docker cp $CONTAINER_ID:/src/base ./base
+            docker cp $CONTAINER_ID:/runtime-libs ./runtime-libs
+            docker cp $CONTAINER_ID:/usr/lib/libmihomo.so ./libmihomo.so
           fi
 
           docker rm $CONTAINER_ID
@@ -163,18 +165,45 @@ jobs:
           mkdir -p SubConverter-Extended
           mv subconverter SubConverter-Extended/
           cp -r base SubConverter-Extended/
+          mkdir -p SubConverter-Extended/usr/lib
+          mv libmihomo.so SubConverter-Extended/usr/lib/
+          cp -r runtime-libs/* SubConverter-Extended/
           
           # Create start script (use /bin/sh for Alpine compatibility)
           cat > SubConverter-Extended/start.sh << 'EOF'
           #!/bin/sh
-          CONFIG_DIR="/etc/SubConverter-Extended"
-          mkdir -p "$CONFIG_DIR" 2>/dev/null || sudo mkdir -p "$CONFIG_DIR"
-          cp -n base/pref.example.toml "$CONFIG_DIR/pref.toml" 2>/dev/null || sudo cp -n base/pref.example.toml "$CONFIG_DIR/pref.toml"
-          ./subconverter -f "$CONFIG_DIR/pref.toml"
+          set -e
+          ROOT="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
+          CONF="${PREF_PATH:-$ROOT/base/pref.toml}"
+          CONF_DIR="$(dirname "$CONF")"
+          mkdir -p "$CONF_DIR"
+          if [ ! -f "$CONF" ] && [ -f "$ROOT/base/pref.example.toml" ]; then
+            cp "$ROOT/base/pref.example.toml" "$CONF"
+          fi
+
+          if [ -x "$ROOT/lib64/ld-linux-x86-64.so.2" ]; then
+            LOADER="$ROOT/lib64/ld-linux-x86-64.so.2"
+            LIB_PATH="$ROOT/lib/x86_64-linux-gnu:$ROOT/usr/lib/x86_64-linux-gnu:$ROOT/lib64:$ROOT/lib:$ROOT/usr/lib"
+          elif [ -x "$ROOT/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2" ]; then
+            LOADER="$ROOT/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+            LIB_PATH="$ROOT/lib/x86_64-linux-gnu:$ROOT/usr/lib/x86_64-linux-gnu:$ROOT/lib:$ROOT/usr/lib"
+          elif [ -x "$ROOT/lib/ld-linux-aarch64.so.1" ]; then
+            LOADER="$ROOT/lib/ld-linux-aarch64.so.1"
+            LIB_PATH="$ROOT/lib/aarch64-linux-gnu:$ROOT/usr/lib/aarch64-linux-gnu:$ROOT/lib:$ROOT/usr/lib"
+          elif [ -x "$ROOT/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1" ]; then
+            LOADER="$ROOT/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1"
+            LIB_PATH="$ROOT/lib/aarch64-linux-gnu:$ROOT/usr/lib/aarch64-linux-gnu:$ROOT/lib:$ROOT/usr/lib"
+          else
+            echo "glibc loader not found in package."
+            exit 1
+          fi
+
+          exec "$LOADER" --library-path "$LIB_PATH" "$ROOT/subconverter" -f "$CONF"
           EOF
           chmod +x SubConverter-Extended/start.sh
           
           tar -czf SubConverter-Extended-${{ needs.prepare.outputs.version }}-alpine-amd64.tar.gz SubConverter-Extended
+          rm -rf runtime-libs libmihomo.so
 
       # Upload Alpine Artifact
       - name: Upload Artifact (Alpine amd64)
@@ -269,6 +298,8 @@ jobs:
           CONTAINER_ID=$(docker create subconverter-temp:arm64-builder)
           docker cp $CONTAINER_ID:/src/subconverter ./subconverter
           docker cp $CONTAINER_ID:/src/base ./base
+          docker cp $CONTAINER_ID:/runtime-libs ./runtime-libs
+          docker cp $CONTAINER_ID:/usr/lib/libmihomo.so ./libmihomo.so
           docker rm $CONTAINER_ID
           chmod +x subconverter
 
@@ -277,17 +308,44 @@ jobs:
           mkdir -p SubConverter-Extended
           mv subconverter SubConverter-Extended/
           cp -r base SubConverter-Extended/
+          mkdir -p SubConverter-Extended/usr/lib
+          mv libmihomo.so SubConverter-Extended/usr/lib/
+          cp -r runtime-libs/* SubConverter-Extended/
 
           cat > SubConverter-Extended/start.sh << 'EOF'
           #!/bin/sh
-          CONFIG_DIR="/etc/SubConverter-Extended"
-          mkdir -p "$CONFIG_DIR" 2>/dev/null || sudo mkdir -p "$CONFIG_DIR"
-          cp -n base/pref.example.toml "$CONFIG_DIR/pref.toml" 2>/dev/null || sudo cp -n base/pref.example.toml "$CONFIG_DIR/pref.toml"
-          ./subconverter -f "$CONFIG_DIR/pref.toml"
+          set -e
+          ROOT="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
+          CONF="${PREF_PATH:-$ROOT/base/pref.toml}"
+          CONF_DIR="$(dirname "$CONF")"
+          mkdir -p "$CONF_DIR"
+          if [ ! -f "$CONF" ] && [ -f "$ROOT/base/pref.example.toml" ]; then
+            cp "$ROOT/base/pref.example.toml" "$CONF"
+          fi
+
+          if [ -x "$ROOT/lib64/ld-linux-x86-64.so.2" ]; then
+            LOADER="$ROOT/lib64/ld-linux-x86-64.so.2"
+            LIB_PATH="$ROOT/lib/x86_64-linux-gnu:$ROOT/usr/lib/x86_64-linux-gnu:$ROOT/lib64:$ROOT/lib:$ROOT/usr/lib"
+          elif [ -x "$ROOT/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2" ]; then
+            LOADER="$ROOT/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+            LIB_PATH="$ROOT/lib/x86_64-linux-gnu:$ROOT/usr/lib/x86_64-linux-gnu:$ROOT/lib:$ROOT/usr/lib"
+          elif [ -x "$ROOT/lib/ld-linux-aarch64.so.1" ]; then
+            LOADER="$ROOT/lib/ld-linux-aarch64.so.1"
+            LIB_PATH="$ROOT/lib/aarch64-linux-gnu:$ROOT/usr/lib/aarch64-linux-gnu:$ROOT/lib:$ROOT/usr/lib"
+          elif [ -x "$ROOT/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1" ]; then
+            LOADER="$ROOT/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1"
+            LIB_PATH="$ROOT/lib/aarch64-linux-gnu:$ROOT/usr/lib/aarch64-linux-gnu:$ROOT/lib:$ROOT/usr/lib"
+          else
+            echo "glibc loader not found in package."
+            exit 1
+          fi
+
+          exec "$LOADER" --library-path "$LIB_PATH" "$ROOT/subconverter" -f "$CONF"
           EOF
           chmod +x SubConverter-Extended/start.sh
 
           tar -czf SubConverter-Extended-${{ needs.prepare.outputs.version }}-alpine-arm64.tar.gz SubConverter-Extended
+          rm -rf runtime-libs libmihomo.so
 
       - name: Upload Artifact (Alpine arm64)
         uses: actions/upload-artifact@v4

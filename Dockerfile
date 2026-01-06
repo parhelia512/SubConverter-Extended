@@ -154,7 +154,7 @@ RUN set -xe && \
           cp -aL "$lib" "/runtime-libs$lib"; \
         fi; \
       done && \
-    for loader in /lib64/ld-linux-x86-64.so.2 /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2; do \
+    for loader in /lib64/ld-linux-x86-64.so.2 /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 /lib/ld-linux-aarch64.so.1 /lib/aarch64-linux-gnu/ld-linux-aarch64.so.1; do \
       if [ -e "$loader" ]; then \
         mkdir -p "/runtime-libs$(dirname "$loader")" && \
         cp -aL "$loader" "/runtime-libs$loader"; \
@@ -189,7 +189,7 @@ COPY --from=builder /etc/nsswitch.conf /etc/nsswitch.conf
 RUN chmod +x /usr/bin/subconverter && chmod +x /usr/lib/libmihomo.so
 
 ENV TZ=Africa/Abidjan
-ENV LD_LIBRARY_PATH="/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib64:/usr/lib"
+ENV LD_LIBRARY_PATH="/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib/aarch64-linux-gnu:/usr/lib/aarch64-linux-gnu:/lib64:/usr/lib"
 RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 WORKDIR /base
@@ -197,6 +197,15 @@ RUN set -e && \
     printf '%s\n' \
       '#!/bin/sh' \
       'set -e' \
+      'ARCH="$(uname -m)"' \
+      'case "$ARCH" in' \
+      '  x86_64) LIB_ARCH="x86_64-linux-gnu" ;;' \
+      '  aarch64|arm64) LIB_ARCH="aarch64-linux-gnu" ;;' \
+      '  *) LIB_ARCH="" ;;' \
+      'esac' \
+      'if [ -n "$LIB_ARCH" ]; then' \
+      '  export LD_LIBRARY_PATH="/lib/${LIB_ARCH}:/usr/lib/${LIB_ARCH}:/lib64:/usr/lib"' \
+      'fi' \
       'CONF="${PREF_PATH:-/base/pref.toml}"' \
       'CONF_DIR="$(dirname "$CONF")"' \
       'mkdir -p "$CONF_DIR"' \
