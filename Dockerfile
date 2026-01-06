@@ -1,14 +1,16 @@
 # ========== GO BUILD STAGE ==========
-# 全链路 musl 化：使用 Alpine Go 镜像
-FROM golang:1.25-alpine AS go-builder
+# 使用 glibc (Debian) 构建 Go 共享库，避免 musl 下 Go runtime 初始化崩溃
+FROM golang:1.25-bookworm AS go-builder
 
 ARG TARGETARCH
 ARG TARGETVARIANT
 
 WORKDIR /build/bridge
 
-# Alpine 使用 apk 包管理器
-RUN apk add --no-cache git build-base gcc
+# Debian 使用 apt 包管理器
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git build-essential && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy Go source code FIRST (needed for dependency analysis)
 COPY bridge/converter.go ./
@@ -47,19 +49,22 @@ RUN echo "==> Building for $TARGETARCH with c-shared mode (musl compatible)" && 
 RUN ls -lh libmihomo.so libmihomo.h
 
 # ========== C++ BUILD STAGE ==========
-# 全链路 musl 化：使用 Alpine 编译
-FROM alpine:latest AS builder
+# 使用 Debian (glibc) 编译，运行时再搬运依赖到 Alpine
+FROM debian:bookworm-slim AS builder
 ARG THREADS="4"
 ARG SHA=""
 ARG VERSION="dev"
 
 WORKDIR /
 
-# 安装 Alpine 构建依赖
-RUN apk add --no-cache \
-    git g++ build-base cmake python3 py3-pip curl \
-    curl-dev pcre2-dev rapidjson-dev yaml-cpp-dev \
-    ca-certificates ninja ccache
+# 安装 Debian 构建依赖
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    git g++ build-essential cmake python3 python3-pip \
+    pkg-config curl \
+    libcurl4-openssl-dev libpcre2-dev rapidjson-dev \
+    libyaml-cpp-dev ca-certificates ninja-build ccache && \
+    rm -rf /var/lib/apt/lists/*
 
 # quickjspp
 RUN set -xe && \
@@ -137,17 +142,32 @@ RUN set -xe && \
     . && \
     ninja -j ${THREADS}
 
+# 收集 glibc 运行时依赖（动态探测，避免固定版本）
+RUN set -xe && \
+    mkdir -p /runtime-libs && \
+    ldd /src/subconverter /usr/lib/libmihomo.so | \
+      awk '/=> \\/|^\\// {print $(NF-1)}' | \
+      sort -u | \
+      while read -r lib; do \
+        if [ -f "$lib" ]; then cp --parents "$lib" /runtime-libs/; fi; \
+      done && \
+    libc_path="$(ldd /src/subconverter | awk '/libc\\.so/ {print $(NF-1)}' | head -n1)" && \
+    libc_dir="$(dirname "$libc_path")" && \
+    for extra in libnss_dns.so.2 libnss_files.so.2 libnss_compat.so.2 libresolv.so.2; do \
+      if [ -f "$libc_dir/$extra" ]; then cp --parents "$libc_dir/$extra" /runtime-libs/; fi; \
+    done
+
 # ========== FINAL STAGE ==========
-# 全链路 musl 化：使用纯 Alpine 作为最终镜像，无 glibc 兼容层
+# Alpine 运行时 + 搬运 glibc 依赖（不固定版本）
 FROM alpine:latest
 
-# 安装运行时依赖（纯 musl）
-RUN apk add --no-cache \
-    libstdc++ pcre2 libcurl yaml-cpp ca-certificates
+RUN apk add --no-cache ca-certificates
 
 COPY --from=builder /src/subconverter /usr/bin/subconverter
 COPY --from=builder /src/base /base/
 COPY --from=builder /usr/lib/libmihomo.so /usr/lib/
+COPY --from=builder /runtime-libs/ /
+COPY --from=builder /etc/nsswitch.conf /etc/nsswitch.conf
 
 # 确保二进制和库可执行
 RUN chmod +x /usr/bin/subconverter && chmod +x /usr/lib/libmihomo.so
