@@ -151,13 +151,13 @@ RUN set -xe && \
       while read -r lib; do \
         if [ -e "$lib" ]; then \
           mkdir -p "/runtime-libs$(dirname "$lib")" && \
-          cp -a "$lib" "/runtime-libs$lib"; \
+          cp -aL "$lib" "/runtime-libs$lib"; \
         fi; \
       done && \
     for loader in /lib64/ld-linux-x86-64.so.2 /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2; do \
       if [ -e "$loader" ]; then \
         mkdir -p "/runtime-libs$(dirname "$loader")" && \
-        cp -a "$loader" "/runtime-libs$loader"; \
+        cp -aL "$loader" "/runtime-libs$loader"; \
       fi; \
     done && \
     libc_path="$(ldd /src/subconverter | awk '$1 == "libc.so.6" {print $3; exit}')" && \
@@ -165,12 +165,12 @@ RUN set -xe && \
     for extra in libnss_dns.so.2 libnss_files.so.2 libnss_compat.so.2 libresolv.so.2; do \
       if [ -e "$libc_dir/$extra" ]; then \
         mkdir -p "/runtime-libs$libc_dir" && \
-        cp -a "$libc_dir/$extra" "/runtime-libs$libc_dir/$extra"; \
+        cp -aL "$libc_dir/$extra" "/runtime-libs$libc_dir/$extra"; \
       fi; \
     done && \
     if [ -f /etc/nsswitch.conf ]; then \
       mkdir -p /runtime-libs/etc && \
-      cp -a /etc/nsswitch.conf /runtime-libs/etc/nsswitch.conf; \
+      cp -aL /etc/nsswitch.conf /runtime-libs/etc/nsswitch.conf; \
     fi
 
 # ========== FINAL STAGE ==========
