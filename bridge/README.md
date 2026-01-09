@@ -2,7 +2,7 @@
 
 ## 📦 What's Been Done
 
-已为 subconverter 集成 mihomo 的节点解析器（通过 CGO）。
+已为 SubConverter-Extended 集成 mihomo 的节点解析器（通过 CGO）。
 
 ### 新增文件
 
@@ -97,4 +97,4 @@ go mod tidy
 
 本模块（`bridge/`）使用的 Mihomo 解析器源自 [metacubex/mihomo](https://github.com/metacubex/mihomo)，遵循 **MIT License**。
 
-整个 subconverter 项目遵循 **GPL-3.0 License**。根据许可证兼容性，MIT 代码可以在 GPL-3.0 项目中使用，但整体项目仍然受 GPL-3.0 约束。
+整个 SubConverter-Extended 项目遵循 **GPL-3.0 License**。根据许可证兼容性，MIT 代码可以在 GPL-3.0 项目中使用，但整体项目仍然受 GPL-3.0 约束。
