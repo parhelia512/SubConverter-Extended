@@ -359,9 +359,11 @@ static bool extractTagPrefix(const std::string &input, std::string &tag,
                              std::string &link) {
   std::string value = trimWhitespace(input, true, true);
   size_t start = std::string::npos;
-  if (startsWith(value, "<tag:"))
+  bool bracketed = false;
+  if (startsWith(value, "<tag:")) {
     start = 5;
-  else if (startsWith(value, "tag:"))
+    bracketed = true;
+  } else if (startsWith(value, "tag:"))
     start = 4;
   else
     return false;
@@ -378,6 +380,8 @@ static bool extractTagPrefix(const std::string &input, std::string &tag,
     return false;
 
   link = value.substr(link_pos);
+  if (bracketed && !link.empty() && link.back() == '>')
+    link.pop_back();
   return true;
 }
 
