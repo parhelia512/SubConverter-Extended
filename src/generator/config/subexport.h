@@ -17,6 +17,7 @@
 
 struct ProxyProvider {
   std::string name;           // provider 名称
+  std::string tag;            // 原始 tag（用于重命名映射）
   std::string url;            // 订阅链接
   uint32_t interval;          // 更新间隔（秒）
   std::string filter;         // 过滤正则
