@@ -143,6 +143,7 @@ jobs:
           # Go module files
           docker cp $CONTAINER_ID:/src/bridge/go.mod bridge/go.mod
           docker cp $CONTAINER_ID:/src/bridge/go.sum bridge/go.sum
+          docker cp $CONTAINER_ID:/src/bridge/libmihomo.h bridge/libmihomo.h
           
           # Go-generated header files
           docker cp $CONTAINER_ID:/src/src/parser/mihomo_schemes.h src/parser/mihomo_schemes.h
@@ -224,7 +225,7 @@ jobs:
       - name: Check for file changes
         id: check_changes
         run: |
-          git diff --quiet bridge/go.mod bridge/go.sum src/parser/mihomo_schemes.h src/parser/param_compat.h include/httplib.h include/nlohmann/json.hpp include/inja.hpp include/jpcre2.hpp include/quickjspp.hpp || echo "changed=true" >> $GITHUB_OUTPUT
+          git diff --quiet bridge/go.mod bridge/go.sum bridge/libmihomo.h src/parser/mihomo_schemes.h src/parser/param_compat.h include/httplib.h include/nlohmann/json.hpp include/inja.hpp include/jpcre2.hpp include/quickjspp.hpp || echo "changed=true" >> $GITHUB_OUTPUT
 
       - name: Commit and push generated files
         if: steps.check_changes.outputs.changed == 'true' && github.event_name != 'pull_request'
@@ -239,7 +240,7 @@ jobs:
           
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add bridge/go.mod bridge/go.sum src/parser/mihomo_schemes.h src/parser/param_compat.h include/httplib.h include/nlohmann/json.hpp include/inja.hpp include/jpcre2.hpp include/quickjspp.hpp
+          git add bridge/go.mod bridge/go.sum bridge/libmihomo.h src/parser/mihomo_schemes.h src/parser/param_compat.h include/httplib.h include/nlohmann/json.hpp include/inja.hpp include/jpcre2.hpp include/quickjspp.hpp
           git commit -m "chore: update auto-generated files and header libraries from build [skip ci]"
           
           git push origin HEAD:$BRANCH_NAME
