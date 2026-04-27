@@ -381,6 +381,7 @@ int renderClashScript(YAML::Node &base_rule, std::vector<RulesetContent> &rulese
                 groups.emplace_back(rule_name);
                 continue;
             }
+            bool inline_expand = false;
             if(!remote_path_prefix.empty())
             {
                 if(fileExist(rule_path, true) || isLink(rule_path))
@@ -401,6 +402,13 @@ int renderClashScript(YAML::Node &base_rule, std::vector<RulesetContent> &rulese
                         groups.emplace_back(rule_name);
                         continue;
                     }
+                    // 方案A：classic=false 时直接内联展开规则，不生成 rule-providers
+                    // 清除已注册的中间状态，避免后续 for(groups) 循环生成 rule-providers 条目
+                    urls.erase(rule_name);
+                    names.erase(rule_name);
+                    rule_type.erase(rule_name);
+                    ruleset_interval.erase(rule_name);
+                    inline_expand = true;
                 }
                 else
                     continue;
@@ -428,7 +436,19 @@ int renderClashScript(YAML::Node &base_rule, std::vector<RulesetContent> &rulese
                 if(!lineSize || strLine[0] == ';' || strLine[0] == '#' || (lineSize >= 2 && strLine[0] == '/' && strLine[1] == '/')) //empty lines and comments are ignored
                     continue;
 
-                if(startsWith(strLine, "DOMAIN-KEYWORD,"))
+                if(inline_expand && !script)
+                {
+                    // 内联展开模式：直接将规则逐条追加到 rules，附加策略组名
+                    vArray = split(strLine, ",");
+                    if(vArray.size() < 2)
+                        continue;
+                    // 重新组装：规则类型,规则内容,策略组[,no-resolve]
+                    std::string inline_rule = vArray[0] + "," + trim(vArray[1]) + "," + rule_group;
+                    if(vArray.size() > 2)
+                        inline_rule += "," + vArray[2];
+                    rules.emplace_back(std::move(inline_rule));
+                }
+                else if(startsWith(strLine, "DOMAIN-KEYWORD,"))
                 {
                     if(script)
                     {
@@ -465,19 +485,23 @@ int renderClashScript(YAML::Node &base_rule, std::vector<RulesetContent> &rulese
                         has_no_resolve = true;
                 }
             }
-            if(has_domain[rule_name] && !script)
-                rules.emplace_back("RULE-SET," + rule_name + " (Domain)," + rule_group);
-            if(has_ipcidr[rule_name] && !script)
+            // 内联展开模式下：规则已逐条写入 rules，无需生成 RULE-SET 引用，也不加入 groups
+            if(!inline_expand)
             {
-                if(has_no_resolve)
-                    rules.emplace_back("RULE-SET," + rule_name + " (IP-CIDR)," + rule_group + ",no-resolve");
-                else
-                    rules.emplace_back("RULE-SET," + rule_name + " (IP-CIDR)," + rule_group);
+                if(has_domain[rule_name] && !script)
+                    rules.emplace_back("RULE-SET," + rule_name + " (Domain)," + rule_group);
+                if(has_ipcidr[rule_name] && !script)
+                {
+                    if(has_no_resolve)
+                        rules.emplace_back("RULE-SET," + rule_name + " (IP-CIDR)," + rule_group + ",no-resolve");
+                    else
+                        rules.emplace_back("RULE-SET," + rule_name + " (IP-CIDR)," + rule_group);
+                }
+                if(!has_domain[rule_name] && !has_ipcidr[rule_name] && !script)
+                    rules.emplace_back("RULE-SET," + rule_name + "," + rule_group);
+                if(std::find(groups.begin(), groups.end(), rule_name) == groups.end())
+                    groups.emplace_back(rule_name);
             }
-            if(!has_domain[rule_name] && !has_ipcidr[rule_name] && !script)
-                rules.emplace_back("RULE-SET," + rule_name + "," + rule_group);
-            if(std::find(groups.begin(), groups.end(), rule_name) == groups.end())
-                groups.emplace_back(rule_name);
         }
     }
     for(std::string &x : groups)
