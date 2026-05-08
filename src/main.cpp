@@ -186,6 +186,7 @@ int main(int argc, char *argv[]) {
   webServer.append_response(
       "GET", "/version", "text/html; charset=utf-8",
       [](RESPONSE_CALLBACK_ARGS) -> std::string {
+        response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive";
         std::string build_id = BUILD_ID;
         std::string build_date = BUILD_DATE;
         auto format_build_date = [](const std::string &value) -> std::string {
@@ -225,6 +226,7 @@ int main(int argc, char *argv[]) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="color-scheme" content="light dark">
     <title>SubConverter-Extended</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
