@@ -26,7 +26,7 @@
 
 WebServer webServer;
 
-static const char *VERSION_FAVICON_DARK = R"(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SubConverter-Extended icon">
+static const char *VERSION_FAVICON_DARK = R"svg(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SubConverter-Extended icon">
   <defs>
     <linearGradient id="bg" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#0f172a"/>
@@ -48,9 +48,9 @@ static const char *VERSION_FAVICON_DARK = R"(<svg xmlns="http://www.w3.org/2000/
   <path d="M24 35l-10 9 10 9" fill="none" stroke="#bef264" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M24 31c0-6 4-10 9-10 3 0 6 1 8 3" fill="none" stroke="#f8fafc" stroke-width="5" stroke-linecap="round"/>
   <path d="M40 33c0 6-4 10-9 10-3 0-6-1-8-3" fill="none" stroke="#f8fafc" stroke-width="5" stroke-linecap="round"/>
-</svg>)";
+</svg>)svg";
 
-static const char *VERSION_FAVICON_LIGHT = R"(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SubConverter-Extended icon">
+static const char *VERSION_FAVICON_LIGHT = R"svg(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SubConverter-Extended icon">
   <defs>
     <linearGradient id="bg" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#ffffff"/>
@@ -73,7 +73,7 @@ static const char *VERSION_FAVICON_LIGHT = R"(<svg xmlns="http://www.w3.org/2000
   <path d="M24 35l-10 9 10 9" fill="none" stroke="#84cc16" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M24 31c0-6 4-10 9-10 3 0 6 1 8 3" fill="none" stroke="#172033" stroke-width="5" stroke-linecap="round"/>
   <path d="M40 33c0 6-4 10-9 10-3 0-6-1-8-3" fill="none" stroke="#172033" stroke-width="5" stroke-linecap="round"/>
-</svg>)";
+</svg>)svg";
 
 std::string versionFaviconDark(Request &, Response &response) {
   response.headers["Cache-Control"] = "public, max-age=86400";
@@ -288,7 +288,7 @@ int main(int argc, char *argv[]) {
                   "SubConverter-Extended/commit/" +
                       build_id + "\" target=\"_blank\">" + build_id + "</a>";
 
-        return R"(<!DOCTYPE html>
+        return R"html(<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -550,17 +550,17 @@ int main(int argc, char *argv[]) {
         <div class="info-grid">
             <div class="info-card">
                 <span class="info-label">Version</span>
-                <div class="info-value">)" VERSION R"(</div>
+                <div class="info-value">)html" VERSION R"html(</div>
             </div>
             <div class="info-card">
                 <span class="info-label">Build</span>
-                <div class="info-value">)" +
-               commit_link + R"(</div>
+                <div class="info-value">)html" +
+               commit_link + R"html(</div>
             </div>
             <div class="info-card">
                 <span class="info-label">Build Date</span>
-                <div class="info-value">)" +
-               build_date_display + R"(</div>
+                <div class="info-value">)html" +
+               build_date_display + R"html(</div>
             </div>
         </div>
         
@@ -583,7 +583,7 @@ int main(int argc, char *argv[]) {
         </div>
     </div>
 </body>
-</html>)";
+</html>)html";
       });
 
   webServer.append_response(
