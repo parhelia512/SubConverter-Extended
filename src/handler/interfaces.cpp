@@ -2124,7 +2124,10 @@ std::string renderTemplate(RESPONSE_CALLBACK_ARGS) {
 
   if (!startsWith(path, global.templatePath) || !fileExist(path)) {
     *status_code = 404;
-    return "Not found";
+    return "Template not found or outside the allowed template directory.\n"
+           "未找到模板，或模板路径超出允许的模板目录。\n"
+           "Please provide a path under the configured template directory.\n"
+           "请提供位于已配置模板目录下的路径。";
   }
   std::string template_content =
       fetchFile(path, parseProxy(global.proxyConfig), global.cacheConfig);
