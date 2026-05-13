@@ -1188,7 +1188,12 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
   // 对于 proxy-provider 模式，允许 nodes 为空（节点从 provider 获取）
   if (nodes.empty() && insert_nodes.empty() && ext.providers.empty()) {
     *status_code = 400;
-    return "No nodes were found!";
+    return "Invalid request: no valid proxy nodes or proxy providers were "
+           "found.\n"
+           "无效请求：未找到有效的代理节点或代理提供者。\n"
+           "Please check whether the subscription URL or node URI format is "
+           "supported, and whether filters excluded all nodes.\n"
+           "请检查订阅链接或节点 URI 格式是否受支持，以及过滤规则是否排除了所有节点。";
   }
   if (!subInfo.empty() && argAppendUserinfo.get(global.appendUserinfo))
     response.headers.emplace("Subscription-UserInfo", subInfo);
@@ -1665,7 +1670,12 @@ std::string surgeConfToClash(RESPONSE_CALLBACK_ARGS) {
   // exit if found nothing
   if (nodes.empty()) {
     *status_code = 400;
-    return "No nodes were found!";
+    return "Invalid request: no valid proxy nodes were found in the Surge "
+           "configuration or its policy-path subscriptions.\n"
+           "无效请求：Surge 配置或其 policy-path 订阅中未找到有效代理节点。\n"
+           "Please check whether the source configuration contains supported "
+           "proxy entries.\n"
+           "请检查源配置中是否包含受支持的代理条目。";
   }
 
   extra_settings ext;
