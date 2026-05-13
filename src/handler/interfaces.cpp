@@ -702,8 +702,13 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
   if (std::find(gRegexBlacklist.cbegin(), gRegexBlacklist.cend(),
                 argIncludeRemark) != gRegexBlacklist.cend() ||
       std::find(gRegexBlacklist.cbegin(), gRegexBlacklist.cend(),
-                argExcludeRemark) != gRegexBlacklist.cend())
-    return "Invalid request!";
+                argExcludeRemark) != gRegexBlacklist.cend()) {
+    *status_code = 400;
+    return "Invalid request: include or exclude filter is not allowed.\n"
+           "无效请求：include 或 exclude 过滤条件不被允许。\n"
+           "Please remove blocked filter patterns and try again.\n"
+           "请移除被拦截的过滤表达式后重试。";
+  }
 
   /// for external configuration
   std::string lClashBase = global.clashBase, lSurgeBase = global.surgeBase,
